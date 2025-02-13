@@ -27,7 +27,6 @@ import android.os.Looper;
 import android.telephony.CarrierConfigManager;
 
 import com.android.messaging.datamodel.DataModel;
-import com.android.messaging.receiver.SmsReceiver;
 import com.android.messaging.sms.BugleUserAgentInfoLoader;
 import com.android.messaging.sms.MmsConfig;
 import com.android.messaging.ui.ConversationDrawables;
@@ -110,8 +109,6 @@ public class BugleApplication extends Application implements UncaughtExceptionHa
 
         maybeStartProfiling();
 
-        BugleApplication.updateAppConfig(context);
-
         // Initialize MMS lib
         initMmsLib(context, bugleGservices, carrierConfigValuesLoader);
         // Fixup messages in flight if we crashed and send any pending
@@ -137,11 +134,6 @@ public class BugleApplication extends Application implements UncaughtExceptionHa
             final CarrierConfigValuesLoader carrierConfigValuesLoader) {
         MmsManager.setCarrierConfigValuesLoader(carrierConfigValuesLoader);
         MmsManager.setUserAgentInfoLoader(new BugleUserAgentInfoLoader(context));
-    }
-
-    public static void updateAppConfig(final Context context) {
-        // Make sure we set the correct state for the SMS/MMS receivers
-        SmsReceiver.updateSmsReceiveHandler(context);
     }
 
     // Called from thread started in FactoryImpl.register() (i.e. not run in tests)

@@ -340,17 +340,6 @@
 
         <!-- Intents for Notification and Delivery -->
         <!-- Registered with the highest possible priority (max_int) -->
-        <receiver android:name=".receiver.SmsReceiver"
-                  android:enabled="false"
-                  android:exported="true"
-                  android:permission="android.permission.BROADCAST_SMS">
-            <intent-filter android:priority="2147483647">
-                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
-            </intent-filter>
-            <intent-filter android:priority="2147483647">
-                <action android:name="android.provider.Telephony.MMS_DOWNLOADED" />
-            </intent-filter>
-        </receiver>
         <receiver android:name=".receiver.MmsWapPushDeliverReceiver"
                   android:exported="true"
                   android:permission="android.permission.BROADCAST_WAP_PUSH">

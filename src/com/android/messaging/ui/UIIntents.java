@@ -336,12 +336,6 @@ public abstract class UIIntents {
     public abstract PendingIntent getPendingIntentForLowStorageNotifications(final Context context);
 
     /**
-     * Get a PendingIntent for showing a new message to a secondary user.
-     */
-    public abstract PendingIntent getPendingIntentForSecondaryUserNewMessageNotification(
-            final Context context);
-
-    /**
      * Get an intent for showing advanced settings.
      */
     public abstract Intent getAdvancedSettingsIntent(final Context context);

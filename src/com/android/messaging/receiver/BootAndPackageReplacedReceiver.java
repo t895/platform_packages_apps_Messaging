@@ -38,8 +38,6 @@ public class BootAndPackageReplacedReceiver extends BroadcastReceiver {
             Factory.get().getApplicationPrefs().putLong(
                     BuglePrefsKeys.LATEST_NOTIFICATION_MESSAGE_TIMESTAMP, Long.MIN_VALUE);
             UpdateMessageNotificationAction.updateMessageNotification();
-
-            BugleApplication.updateAppConfig(context);
         } else {
             LogUtil.i(LogUtil.BUGLE_TAG, "BootAndPackageReplacedReceiver got unexpected action: "
                     + intent.getAction());

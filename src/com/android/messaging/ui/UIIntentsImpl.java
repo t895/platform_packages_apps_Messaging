@@ -472,12 +472,6 @@ public class UIIntentsImpl extends UIIntents {
     }
 
     @Override
-    public PendingIntent getPendingIntentForSecondaryUserNewMessageNotification(
-            final Context context) {
-        return getPendingIntentForConversationListActivity(context);
-    }
-
-    @Override
     public Intent getWirelessAlertsIntent() {
         final Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.setComponent(new ComponentName(CMAS_COMPONENT, CELL_BROADCAST_LIST_ACTIVITY));

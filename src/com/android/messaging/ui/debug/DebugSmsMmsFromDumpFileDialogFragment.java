@@ -37,7 +37,7 @@ import android.widget.TextView;
 import com.android.messaging.R;
 import com.android.messaging.datamodel.action.ReceiveMmsMessageAction;
 import com.android.messaging.datamodel.data.ParticipantData;
-import com.android.messaging.receiver.SmsReceiver;
+import com.android.messaging.receiver.SmsDeliverReceiver;
 import com.android.messaging.sms.MmsUtils;
 import com.android.messaging.util.DebugUtils;
 import com.android.messaging.util.LogUtil;
@@ -131,8 +131,8 @@ public class DebugSmsMmsFromDumpFileDialogFragment extends DialogFragment {
         if (dumpFileName.startsWith(MmsUtils.SMS_DUMP_PREFIX)) {
             final SmsMessage[] messages = DebugUtils.retreiveSmsFromDumpFile(dumpFileName);
             if (messages != null) {
-                SmsReceiver.deliverSmsMessages(getActivity(), ParticipantData.DEFAULT_SELF_SUB_ID,
-                        0, messages);
+                SmsDeliverReceiver.deliverSmsMessages(getActivity(),
+                        ParticipantData.DEFAULT_SELF_SUB_ID, 0, messages);
             } else {
                 LogUtil.e(LogUtil.BUGLE_TAG,
                         "receiveFromDumpFile: invalid sms dump file " + dumpFileName);

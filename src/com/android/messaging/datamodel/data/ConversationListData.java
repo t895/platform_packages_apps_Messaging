@@ -31,7 +31,6 @@ import com.android.messaging.datamodel.SyncManager;
 import com.android.messaging.datamodel.binding.BindableData;
 import com.android.messaging.datamodel.binding.BindingBase;
 import com.android.messaging.datamodel.data.ConversationListItemData.ConversationListViewColumns;
-import com.android.messaging.receiver.SmsReceiver;
 import com.android.messaging.util.Assert;
 import com.android.messaging.util.LogUtil;
 
@@ -176,8 +175,6 @@ public class ConversationListData extends BindableData
 
     public void handleMessagesSeen() {
         BugleNotifications.markAllMessagesAsSeen();
-
-        SmsReceiver.cancelSecondaryUserNotification();
     }
 
     @Override
