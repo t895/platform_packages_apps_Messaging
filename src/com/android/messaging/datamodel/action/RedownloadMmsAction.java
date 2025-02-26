@@ -31,6 +31,8 @@ import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.datamodel.data.MessageData;
 import com.android.messaging.util.LogUtil;
 
+import java.util.ArrayList;
+
 /**
  * Action to manually start an MMS download (after failed or manual mms download)
  */
@@ -43,8 +45,8 @@ public class RedownloadMmsAction extends Action implements Parcelable {
     /**
      * Download an MMS message
      */
-    public static void redownloadMessage(final String messageId) {
-        final RedownloadMmsAction action = new RedownloadMmsAction(messageId);
+    public static void redownloadMessage(final String[] messageIds) {
+        final RedownloadMmsAction action = new RedownloadMmsAction(messageIds);
         action.start();
     }
 
@@ -52,32 +54,50 @@ public class RedownloadMmsAction extends Action implements Parcelable {
      * Get a pending intent of for downloading an MMS
      */
     public static PendingIntent getPendingIntentForRedownloadMms(
-            final Context context, final String messageId) {
-        final Action action = new RedownloadMmsAction(messageId);
+            final Context context, final String[] messageIds) {
+        final Action action = new RedownloadMmsAction(messageIds);
         return ActionService.makeStartActionPendingIntent(context,
                 action, REQUEST_CODE_PENDING_INTENT, false /*launchesAnActivity*/);
     }
 
     // Core parameters needed for all types of message
-    private static final String KEY_MESSAGE_ID = "message_id";
+    private static final String KEY_MESSAGE_IDS = "message_id";
 
     /**
      * Constructor used for retrying sending in the background (only message id available)
      */
-    RedownloadMmsAction(final String messageId) {
+    RedownloadMmsAction(final String[] messageIds) {
         super();
-        actionParameters.putString(KEY_MESSAGE_ID, messageId);
+        actionParameters.putStringArray(KEY_MESSAGE_IDS, messageIds);
+    }
+
+    @Override
+    protected Object executeAction() {
+        final String[] messageIds = actionParameters.getStringArray(KEY_MESSAGE_IDS);
+        if (messageIds == null || messageIds.length == 0) {
+            return null;
+        }
+
+        final DatabaseWrapper db = DataModel.get().getDatabase();
+        ArrayList<MessageData> messages = new ArrayList<>();
+        for (String messageId : messageIds) {
+            MessageData message = downloadMessage(db, messageId);
+            if (message != null) {
+                messages.add(message);
+            }
+        }
+
+        // Immediately update the notifications in case we came from the download action from a
+        // heads-up notification. This will dismiss the heads-up notification.
+        BugleNotifications.update(BugleNotifications.UPDATE_ALL);
+
+        return messages;
     }
 
     /**
      * Read message from database and change status to allow downloading
      */
-    @Override
-    protected Object executeAction() {
-        final String messageId = actionParameters.getString(KEY_MESSAGE_ID);
-
-        final DatabaseWrapper db = DataModel.get().getDatabase();
-
+    private MessageData downloadMessage(final DatabaseWrapper db, String messageId) {
         MessageData message = BugleDatabaseOperations.readMessage(db, messageId);
         // Check message can be redownloaded
         if (message != null && message.canRedownloadMessage()) {
@@ -101,9 +121,6 @@ public class RedownloadMmsAction extends Action implements Parcelable {
             LogUtil.e(LogUtil.BUGLE_TAG,
                     "Attempt to download a missing or un-redownloadable message");
         }
-        // Immediately update the notifications in case we came from the download action from a
-        // heads-up notification. This will dismiss the heads-up notification.
-        BugleNotifications.update(BugleNotifications.UPDATE_ALL);
         return message;
     }
 

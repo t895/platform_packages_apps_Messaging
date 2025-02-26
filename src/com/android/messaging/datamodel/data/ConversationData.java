@@ -612,7 +612,7 @@ public class ConversationData extends BindableData {
             final String messageId) {
         Assert.isTrue(binding.getData() == this);
         Assert.notNull(messageId);
-        RedownloadMmsAction.redownloadMessage(messageId);
+        RedownloadMmsAction.redownloadMessage(new String[]{messageId});
     }
 
     public void resendMessage(final BindingBase<ConversationData> binding, final String messageId) {

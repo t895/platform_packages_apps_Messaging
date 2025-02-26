@@ -371,10 +371,10 @@ public class BugleNotifications {
         replyActionBuilder.addRemoteInput(remoteInput);
         notifBuilder.addAction(replyActionBuilder.build());
 
-        final String messageId = conversation.getLatestMessageId();
-        if (conversation.getDoesLatestMessageNeedDownload() && messageId != null) {
+        final String[] messageIdsToDownload = conversation.getMessageIdsToDownload();
+        if (messageIdsToDownload.length > 0) {
             final PendingIntent downloadPendingIntent =
-                    RedownloadMmsAction.getPendingIntentForRedownloadMms(context, messageId);
+                    RedownloadMmsAction.getPendingIntentForRedownloadMms(context, messageIdsToDownload);
 
             final NotificationCompat.Action.Builder actionBuilder =
                     new NotificationCompat.Action.Builder(R.drawable.ic_file_download_light,

@@ -271,12 +271,11 @@ public class MessageNotificationState {
             return messageLineInfo.mMessageId;
         }
 
-        public boolean getDoesLatestMessageNeedDownload() {
-            final MessageLineInfo messageLineInfo = getLatestMessageLineInfo();
-            if (messageLineInfo == null) {
-                return false;
-            }
-            return messageLineInfo.mIsManualDownloadNeeded;
+        public String[] getMessageIdsToDownload() {
+            return mLineInfos.stream()
+                    .filter(messageLineInfo -> messageLineInfo.mIsManualDownloadNeeded)
+                    .map(messageLineInfo -> messageLineInfo.mMessageId)
+                    .toArray(String[]::new);
         }
 
         private MessageLineInfo getLatestMessageLineInfo() {
