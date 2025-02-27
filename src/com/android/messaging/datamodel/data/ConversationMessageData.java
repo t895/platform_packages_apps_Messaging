@@ -22,6 +22,8 @@ import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 
+import com.android.messaging.Factory;
+import com.android.messaging.R;
 import com.android.messaging.datamodel.DatabaseHelper;
 import com.android.messaging.datamodel.DatabaseHelper.MessageColumns;
 import com.android.messaging.datamodel.DatabaseHelper.PartColumns;
@@ -40,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 /**
@@ -535,11 +538,22 @@ public class ConversationMessageData {
                 || mStatus == MessageData.BUGLE_STATUS_OUTGOING_DELIVERED);
     }
 
+    public String getSelfParticipantString() {
+        return Factory.get().getApplicationContext()
+                .getString(R.string.unknown_self_participant);
+    }
+
     public String getSenderFullName() {
+        if (Objects.equals(getSelfParticipantId(), getParticipantId())) {
+            return getSelfParticipantString();
+        }
         return mSenderFullName;
     }
 
     public String getSenderFirstName() {
+        if (Objects.equals(getSelfParticipantId(), getParticipantId())) {
+            return getSelfParticipantString();
+        }
         return mSenderFirstName;
     }
 
@@ -645,22 +659,35 @@ public class ConversationMessageData {
     }
 
     public static final String getNotificationQuerySql() {
-        return CONVERSATION_MESSAGES_QUERY_SQL
+        return "WITH first_unseen as ("
+                + "SELECT " + MessageColumns.CONVERSATION_ID + ", "
+                + "MIN(" + MessageColumns.RECEIVED_TIMESTAMP + ") as first_unseen_timestamp"
+                + " FROM " + DatabaseHelper.MESSAGES_TABLE
+                + " WHERE " + MessageColumns.SEEN + " = 0"
                 + " AND "
-                + "(" + DatabaseHelper.MessageColumns.STATUS + " in ("
+                + DatabaseHelper.MessageColumns.STATUS + " IN ("
                 + MessageData.BUGLE_STATUS_INCOMING_COMPLETE + ", "
                 + MessageData.BUGLE_STATUS_INCOMING_YET_TO_MANUAL_DOWNLOAD + ")"
-                + " AND "
-                + DatabaseHelper.MessageColumns.SEEN + " = 0)"
-                + ")"
-                + NOTIFICATION_QUERY_SQL_GROUP_BY;
-    }
-
-    public static final String getWearableQuerySql() {
-        return CONVERSATION_MESSAGES_QUERY_SQL
-                + " AND "
-                + DatabaseHelper.MESSAGES_TABLE + "." + MessageColumns.CONVERSATION_ID + "=?"
-                + " AND "
+                + " GROUP BY " + MessageColumns.CONVERSATION_ID + ")"
+                + " SELECT " + CONVERSATION_MESSAGES_QUERY_PROJECTION_SQL
+                + " FROM " + DatabaseHelper.MESSAGES_TABLE
+                + " LEFT JOIN " + DatabaseHelper.PARTS_TABLE
+                + " ON (" + DatabaseHelper.MESSAGES_TABLE + "." + MessageColumns._ID
+                + "=" + DatabaseHelper.PARTS_TABLE + '.' + PartColumns.MESSAGE_ID + ") "
+                + " LEFT JOIN " + DatabaseHelper.PARTICIPANTS_TABLE
+                + " ON (" + DatabaseHelper.MESSAGES_TABLE + '.' +  MessageColumns.SENDER_PARTICIPANT_ID
+                + '=' + DatabaseHelper.PARTICIPANTS_TABLE + '.' + ParticipantColumns._ID + ")"
+                + " LEFT JOIN " + DatabaseHelper.CONVERSATIONS_TABLE
+                + " ON (" + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns.CONVERSATION_ID
+                + '=' + DatabaseHelper.CONVERSATIONS_TABLE + '.' + ConversationColumns._ID + ")"
+                + " LEFT JOIN first_unseen f"
+                + " ON " + DatabaseHelper.MESSAGES_TABLE + "." + MessageColumns.CONVERSATION_ID
+                + '=' + "f." + MessageColumns.CONVERSATION_ID
+                // Exclude draft messages from main view
+                + " WHERE " + DatabaseHelper.MESSAGES_TABLE + "." + MessageColumns.STATUS
+                + " <> " + MessageData.BUGLE_STATUS_OUTGOING_DRAFT
+                // Not 100% sure about the following
+                + " AND ("
                 + DatabaseHelper.MessageColumns.STATUS + " IN ("
                 + MessageData.BUGLE_STATUS_OUTGOING_DELIVERED + ", "
                 + MessageData.BUGLE_STATUS_OUTGOING_COMPLETE + ", "
@@ -670,7 +697,13 @@ public class ConversationMessageData {
                 + MessageData.BUGLE_STATUS_OUTGOING_AWAITING_RETRY + ", "
                 + MessageData.BUGLE_STATUS_INCOMING_COMPLETE + ", "
                 + MessageData.BUGLE_STATUS_INCOMING_YET_TO_MANUAL_DOWNLOAD + ")"
-                + ")"
+                + " AND ("
+                + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns.SEEN + " = 0"
+                + " OR "
+                + DatabaseHelper.MESSAGES_TABLE + '.' + MessageColumns.RECEIVED_TIMESTAMP
+                + " >= f.first_unseen_timestamp"
+                + ')'
+                + ')'
                 + NOTIFICATION_QUERY_SQL_GROUP_BY;
     }
 
