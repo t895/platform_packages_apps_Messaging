@@ -106,8 +106,10 @@ public class NoConfirmationSmsSendService extends IntentService {
             // TODO: it's possible that a long message would require sending it via mms,
             // but we're not testing for that here and we're sending the message as an sms.
 
+            long timestamp = System.currentTimeMillis();
             if (TextUtils.isEmpty(conversationId)) {
-                InsertNewMessageAction.insertNewMessage(subId, recipients, message, subject);
+                InsertNewMessageAction.insertNewMessage(subId, recipients, message, subject,
+                        timestamp);
             } else {
                 MessageData messageData = null;
                 if (requiresMms) {
@@ -125,9 +127,9 @@ public class NoConfirmationSmsSendService extends IntentService {
                     messageData = MessageData.createDraftSmsMessage(conversationId, selfId,
                             message);
                 }
-                InsertNewMessageAction.insertNewMessage(messageData);
+                InsertNewMessageAction.insertNewMessage(messageData, timestamp);
             }
-            BugleNotifications.updateWithInlineReply(conversationId, message);
+            BugleNotifications.updateWithInlineReply(conversationId, message, timestamp);
         }
     }
 

@@ -69,13 +69,18 @@ public class InsertNewMessageAction extends Action implements Parcelable {
         action.start();
     }
 
+    public static void insertNewMessage(final MessageData message, final long timestamp) {
+        final InsertNewMessageAction action = new InsertNewMessageAction(message, timestamp);
+        action.start();
+    }
+
     /**
      * Insert message (no listener)
      */
     public static void insertNewMessage(final int subId, final String recipients,
-            final String messageText, final String subject) {
+            final String messageText, final String subject, final long timestamp) {
         final InsertNewMessageAction action = new InsertNewMessageAction(
-                subId, recipients, messageText, subject);
+                subId, recipients, messageText, subject, timestamp);
         action.start();
     }
 
@@ -88,6 +93,7 @@ public class InsertNewMessageAction extends Action implements Parcelable {
     private static final String KEY_RECIPIENTS = "recipients";
     private static final String KEY_MESSAGE_TEXT = "message_text";
     private static final String KEY_SUBJECT_TEXT = "subject_text";
+    private static final String KEY_CUSTOM_TIMESTAMP = "custom_timestamp";
 
     private InsertNewMessageAction(final MessageData message) {
         this(message, ParticipantData.DEFAULT_SELF_SUB_ID);
@@ -100,8 +106,14 @@ public class InsertNewMessageAction extends Action implements Parcelable {
         actionParameters.putInt(KEY_SUB_ID, subId);
     }
 
+    private InsertNewMessageAction(final MessageData message, final long custom_timestamp) {
+        super();
+        actionParameters.putParcelable(KEY_MESSAGE, message);
+        actionParameters.putLong(KEY_CUSTOM_TIMESTAMP, custom_timestamp);
+    }
+
     private InsertNewMessageAction(final int subId, final String recipients,
-            final String messageText, final String subject) {
+            final String messageText, final String subject, final long custom_timestamp) {
         super();
         if (TextUtils.isEmpty(recipients) || TextUtils.isEmpty(messageText)) {
             Assert.fail("InsertNewMessageAction: Can't have empty recipients or message");
@@ -110,6 +122,7 @@ public class InsertNewMessageAction extends Action implements Parcelable {
         actionParameters.putString(KEY_RECIPIENTS, recipients);
         actionParameters.putString(KEY_MESSAGE_TEXT, messageText);
         actionParameters.putString(KEY_SUBJECT_TEXT, subject);
+        actionParameters.putLong(KEY_CUSTOM_TIMESTAMP, custom_timestamp);
     }
 
     /**
@@ -141,7 +154,8 @@ public class InsertNewMessageAction extends Action implements Parcelable {
             message.bindParticipantId(self.getId());
         }
 
-        final long timestamp = System.currentTimeMillis();
+        final long custom_timestamp = actionParameters.getLong(KEY_CUSTOM_TIMESTAMP, -1);
+        final long timestamp = custom_timestamp == -1 ? System.currentTimeMillis() : custom_timestamp;
         final ArrayList<String> recipients =
                 BugleDatabaseOperations.getRecipientsForConversation(db, conversationId);
         if (recipients.size() < 1) {

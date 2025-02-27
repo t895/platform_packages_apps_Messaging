@@ -515,7 +515,8 @@ public class BugleNotifications {
         return null;
     }
 
-    public static void updateWithInlineReply(final String conversationId, final String message) {
+    public static void updateWithInlineReply(final String conversationId, final String message,
+                                             final long timestamp) {
         Context context = Factory.get().getApplicationContext();
         Notification activeNotification =
                 NotificationChannelUtil.INSTANCE.getActiveNotification(conversationId);
@@ -528,7 +529,7 @@ public class BugleNotifications {
 
                 String selfString = context.getString(R.string.unknown_self_participant);
                 activeStyle.addMessage(new NotificationCompat.MessagingStyle.Message(message,
-                        System.currentTimeMillis(),
+                        timestamp,
                         new Person.Builder().setName(selfString).build()));
                 recoveredBuilder.setStyle(activeStyle);
                 recoveredBuilder.setOnlyAlertOnce(true);
