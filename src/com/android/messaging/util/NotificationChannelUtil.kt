@@ -13,6 +13,7 @@ import com.android.messaging.R
 object NotificationChannelUtil {
     const val INCOMING_MESSAGES = "Conversations"
     const val ALERTS_CHANNEL = "Alerts"
+    const val DOWNLOADS_CHANNEL = "Downloads"
 
     private fun getNotificationManager(): NotificationManager {
         val context = Factory.get().applicationContext
@@ -33,6 +34,13 @@ object NotificationChannelUtil {
                 ALERTS_CHANNEL,
                 context.getString(R.string.alerts_channel),
                 NotificationManager.IMPORTANCE_HIGH
+            )
+        )
+        notificationManager.createNotificationChannel(
+            NotificationChannel(
+                DOWNLOADS_CHANNEL,
+                context.getString(R.string.downloads_channel),
+                NotificationManager.IMPORTANCE_LOW
             )
         )
     }

@@ -16,12 +16,18 @@
 
 package com.android.messaging.datamodel.action;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.core.app.NotificationCompat;
+
+import com.android.messaging.Factory;
+import com.android.messaging.R;
 import com.android.messaging.datamodel.BugleDatabaseOperations;
 import com.android.messaging.datamodel.BugleNotifications;
 import com.android.messaging.datamodel.DataModel;
@@ -30,6 +36,7 @@ import com.android.messaging.datamodel.DatabaseWrapper;
 import com.android.messaging.datamodel.MessagingContentProvider;
 import com.android.messaging.datamodel.data.MessageData;
 import com.android.messaging.util.LogUtil;
+import com.android.messaging.util.NotificationChannelUtil;
 
 import java.util.ArrayList;
 
@@ -41,6 +48,8 @@ public class RedownloadMmsAction extends Action implements Parcelable {
     private static final int REQUEST_CODE_PENDING_INTENT = 101;
 
     private static final String KEY_SUB_ID = "sub_id";
+
+    public static final int NOTIFICATION_DOWNLOADING_ID = 1;
 
     /**
      * Download an MMS message
@@ -78,6 +87,16 @@ public class RedownloadMmsAction extends Action implements Parcelable {
             return null;
         }
 
+        Context context = Factory.get().getApplicationContext();
+        Notification notification =
+                new NotificationCompat.Builder(context, NotificationChannelUtil.DOWNLOADS_CHANNEL)
+                        .setContentTitle(context.getString(R.string.message_status_downloading))
+                        .setSmallIcon(R.drawable.ic_sms_light)
+                        .setProgress(0, 0, true)
+                        .build();
+        NotificationManager manager = context.getSystemService(NotificationManager.class);
+        manager.notify(NOTIFICATION_DOWNLOADING_ID, notification);
+
         final DatabaseWrapper db = DataModel.get().getDatabase();
         ArrayList<MessageData> messages = new ArrayList<>();
         for (String messageId : messageIds) {
@@ -86,6 +105,8 @@ public class RedownloadMmsAction extends Action implements Parcelable {
                 messages.add(message);
             }
         }
+
+        manager.cancel(NOTIFICATION_DOWNLOADING_ID);
 
         // Immediately update the notifications in case we came from the download action from a
         // heads-up notification. This will dismiss the heads-up notification.
